@@ -48,30 +48,24 @@ To enable or update the deployment:
 3. Select branch **main** and folder **/ (root)**, then **Save**.
 4. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add `https://hirwacedric123.github.io/*` to your API key’s **HTTP referrers** so the map works on the live site.
 
-### 5. Deploy with Firebase Hosting
-The project includes a `firebase.json` config for [Firebase Hosting](https://firebase.google.com/docs/hosting).
+### 5. Deploy with Netlify
+The project includes a `netlify.toml` config for [Netlify](https://www.netlify.com/).
 
-1. **Install Firebase CLI** (if needed):
-   ```bash
-   npm install -g firebase-tools
-   ```
-2. **Log in** to your Google account:
-   ```bash
-   firebase login
-   ```
-3. **Create a Firebase project** (or use an existing one) at [Firebase Console](https://console.firebase.google.com/).
-4. **Link this folder** to your project:
-   ```bash
-   firebase use --add
-   ```
-   Select your project and choose an alias (e.g. `default`).
-5. **Deploy**:
-   ```bash
-   firebase deploy
-   ```
-   Your site will be at `https://<project-id>.web.app` (and `https://<project-id>.firebaseapp.com`).
+**Option A – Connect GitHub (recommended, auto-deploys on push):**
+1. Sign in at [app.netlify.com](https://app.netlify.com/) with GitHub.
+2. Click **Add new site** → **Import an existing project**.
+3. Choose **GitHub** and authorize Netlify, then select the **hirwacedric123/traffic_system** repo.
+4. Netlify will detect the config: **Build command** can stay empty, **Publish directory** is `.` (from `netlify.toml`).
+5. Click **Deploy site**. Your site will be at `https://<random-name>.netlify.app` (you can change it in **Site settings** → **Domain management**).
+6. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add `https://*.netlify.app/*` (or your exact site URL) to your Maps API key’s **HTTP referrers**.
 
-6. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add `https://<project-id>.web.app/*` and `https://<project-id>.firebaseapp.com/*` to your Maps API key’s **HTTP referrers**.
+**Option B – Deploy from CLI:**
+```bash
+npm install -g netlify-cli
+netlify login
+netlify init   # link to a new or existing site
+netlify deploy --prod
+```
 
 ## Folder Structure
 ```
