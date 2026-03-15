@@ -39,6 +39,39 @@ This is a static frontend app. You can open `index.html` directly in your browse
 #### Using VSCode Live Server Extension
 - Right-click `index.html` and select **Open with Live Server**.
 
+### 4. Deploy with GitHub Pages
+This app is deployed at **[https://hirwacedric123.github.io/traffic_system/](https://hirwacedric123.github.io/traffic_system/)**.
+
+To enable or update the deployment:
+1. Go to your repo **Settings** → **Pages**.
+2. Under **Build and deployment** → **Source**, choose **Deploy from a branch**.
+3. Select branch **main** and folder **/ (root)**, then **Save**.
+4. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add `https://hirwacedric123.github.io/*` to your API key’s **HTTP referrers** so the map works on the live site.
+
+### 5. Deploy with Firebase Hosting
+The project includes a `firebase.json` config for [Firebase Hosting](https://firebase.google.com/docs/hosting).
+
+1. **Install Firebase CLI** (if needed):
+   ```bash
+   npm install -g firebase-tools
+   ```
+2. **Log in** to your Google account:
+   ```bash
+   firebase login
+   ```
+3. **Create a Firebase project** (or use an existing one) at [Firebase Console](https://console.firebase.google.com/).
+4. **Link this folder** to your project:
+   ```bash
+   firebase use --add
+   ```
+   Select your project and choose an alias (e.g. `default`).
+5. **Deploy**:
+   ```bash
+   firebase deploy
+   ```
+   Your site will be at `https://<project-id>.web.app` (and `https://<project-id>.firebaseapp.com`).
+
+6. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add `https://<project-id>.web.app/*` and `https://<project-id>.firebaseapp.com/*` to your Maps API key’s **HTTP referrers**.
 
 ## Folder Structure
 ```
