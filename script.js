@@ -347,6 +347,13 @@ function showNavigationFooter() {
         </div>
     `;
     document.body.appendChild(footer);
+
+    // Ensure the fullscreen map always ends exactly above the footer
+    const updateNavFooterHeightVar = () => {
+        document.documentElement.style.setProperty('--nav-footer-height', `${footer.offsetHeight}px`);
+    };
+    updateNavFooterHeightVar();
+    window.addEventListener('resize', updateNavFooterHeightVar);
 }
 
 // Exit navigation mode
@@ -359,6 +366,7 @@ function exitNavigation() {
     if (navFooter) {
         navFooter.remove();
     }
+    document.documentElement.style.removeProperty('--nav-footer-height');
     // Restore main content
     document.getElementById('controls').style.display = 'block';
     document.getElementById('routeInfo').style.display = 'block';
