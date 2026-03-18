@@ -597,6 +597,14 @@
                 <p>Find the best route with real-time traffic updates</p>
             </div>
             <nav style="display: flex; gap: 15px; align-items: center;">
+                <a id="login-link" href="auth.html" style="display: none;">
+                    <span style="font-size: 1.2em;">🔐</span>
+                    Login
+                </a>
+                <a id="logout-btn" href="#" style="display: none; background: linear-gradient(90deg, var(--danger) 60%, #ffb199 100%); border: 1.5px solid rgba(255,255,255,0.18);">
+                    <span style="font-size: 1.2em;">🚪</span>
+                    Logout
+                </a>
                 <a href="issue-report.html">
                     <span style="font-size: 1.2em;">⚠️</span>
                     Report an Issue
@@ -664,6 +672,9 @@
     <script>
       // Hide admin button if not admin
       document.addEventListener('DOMContentLoaded', function() {
+        const loginLink = document.getElementById('login-link');
+        const logoutBtn = document.getElementById('logout-btn');
+
         const loggedInUser = sessionStorage.getItem('loggedInUser');
         let isAdmin = false;
         try {
@@ -672,6 +683,27 @@
             isAdmin = user && user.role === 'admin';
           }
         } catch (e) {}
+
+        // Toggle login/logout visibility
+        if (loginLink && logoutBtn) {
+          if (loggedInUser) {
+            loginLink.style.display = 'none';
+            logoutBtn.style.display = 'flex';
+          } else {
+            logoutBtn.style.display = 'none';
+            loginLink.style.display = 'flex';
+          }
+        }
+
+        // Logout handler
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            sessionStorage.removeItem('loggedInUser');
+            window.location.href = 'auth.html';
+          });
+        }
+
         const adminBtn = document.getElementById('admin-btn');
         if (adminBtn && !isAdmin) {
           adminBtn.style.display = 'none';
