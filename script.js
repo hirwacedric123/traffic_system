@@ -227,6 +227,8 @@ let currentRoute = null;
 let navigationMode = false;
 let userLocation = null;
 let locationWatcher = null;
+let navFooterResizeObserver = null;
+let navFooterResizeHandler = null;
 
 function showError(message) {
     const errorDiv = document.getElementById('error');
@@ -353,7 +355,14 @@ function showNavigationFooter() {
         document.documentElement.style.setProperty('--nav-footer-height', `${footer.offsetHeight}px`);
     };
     updateNavFooterHeightVar();
-    window.addEventListener('resize', updateNavFooterHeightVar);
+    navFooterResizeHandler = updateNavFooterHeightVar;
+    window.addEventListener('resize', navFooterResizeHandler);
+
+    // Keep in sync even when footer height changes without a resize
+    if (typeof ResizeObserver !== 'undefined') {
+        navFooterResizeObserver = new ResizeObserver(() => updateNavFooterHeightVar());
+        navFooterResizeObserver.observe(footer);
+    }
 }
 
 // Exit navigation mode
@@ -365,6 +374,14 @@ function exitNavigation() {
     const navFooter = document.getElementById('navigation-footer');
     if (navFooter) {
         navFooter.remove();
+    }
+    if (navFooterResizeObserver) {
+        navFooterResizeObserver.disconnect();
+        navFooterResizeObserver = null;
+    }
+    if (navFooterResizeHandler) {
+        window.removeEventListener('resize', navFooterResizeHandler);
+        navFooterResizeHandler = null;
     }
     document.documentElement.style.removeProperty('--nav-footer-height');
     // Restore main content
