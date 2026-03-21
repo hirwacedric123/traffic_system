@@ -84,7 +84,7 @@ Kigali_Traffic_App/
 ```
 
 ## Usage
-- **Sign Up / Log In:** Access the app via `auth.html`. Users can sign up or log in. Admin uses `admin@kigali.com` / `admin123`.
+- **Sign Up / Log In:** Access the app via `auth.html`. Users can sign up or log in. Admin account is created with `flask --app backend.app create-admin` (configurable via `ADMIN_EMAIL` and `ADMIN_PASSWORD`).
 
 - **Get Directions:** Enter start and end locations, click **Get Directions**.
 - **Start Navigation:** You can start navigation on the chosen route **Start Navigation**.
