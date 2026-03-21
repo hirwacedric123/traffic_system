@@ -266,6 +266,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            margin:10px;
         }
         .loading {
             position: absolute;
@@ -672,43 +673,43 @@
     <!-- Include the JavaScript file we created earlier -->
     <script src="script.js"></script>
     <script>
-      // Hide admin button if not admin
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', async function() {
         const loginLink = document.getElementById('login-link');
         const logoutBtn = document.getElementById('logout-btn');
 
-        const loggedInUser = sessionStorage.getItem('loggedInUser');
-        let isAdmin = false;
         try {
-          if (loggedInUser) {
-            const user = JSON.parse(loggedInUser);
-            isAdmin = user && user.role === 'admin';
-          }
-        } catch (e) {}
+          const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+          const meData = await meResponse.json().catch(() => ({}));
 
-        // Toggle login/logout visibility
-        if (loginLink && logoutBtn) {
-          if (loggedInUser) {
-            loginLink.style.display = 'none';
-            logoutBtn.style.display = 'flex';
-          } else {
+          if (loginLink && logoutBtn) {
+            if (meResponse.ok && meData.authenticated) {
+              loginLink.style.display = 'none';
+              logoutBtn.style.display = 'flex';
+            } else {
+              logoutBtn.style.display = 'none';
+              loginLink.style.display = 'flex';
+            }
+          }
+        } catch (error) {
+          if (loginLink && logoutBtn) {
             logoutBtn.style.display = 'none';
             loginLink.style.display = 'flex';
           }
         }
 
-        // Logout handler
         if (logoutBtn) {
-          logoutBtn.addEventListener('click', function(e) {
+          logoutBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            sessionStorage.removeItem('loggedInUser');
+            try {
+              await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+              });
+            } catch (error) {}
             window.location.href = 'auth.html';
           });
-        }
-
-        const adminBtn = document.getElementById('admin-btn');
-        if (adminBtn && !isAdmin) {
-          adminBtn.style.display = 'none';
         }
       });
     </script>

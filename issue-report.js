@@ -4,6 +4,19 @@ let marker;
 let selectedLocation = null;
 let currentLocation = null;
 
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        ...options
+    });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+}
+
 // Custom popup function
 function showPopup(title, message, type = 'info') {
     const popupOverlay = document.getElementById('popup-overlay');
@@ -196,9 +209,8 @@ async function submitIssue(event) {
             imageData = await imageToBase64(imageFile);
         }
         
-        // Create issue object
+        // Create issue payload
         const issue = {
-            id: Date.now().toString(),
             type: issueType,
             description: description,
             location: {
@@ -206,15 +218,24 @@ async function submitIssue(event) {
                 coordinates: selectedLocation
             },
             image: imageData,
-            timestamp: new Date().toISOString(),
-            status: 'pending',
-            reporter: sessionStorage.getItem('loggedInUser') || 'anonymous'
+            status: 'pending'
         };
-        
-        // Save to localStorage
-        const issues = JSON.parse(localStorage.getItem('trafficIssues') || '[]');
-        issues.push(issue);
-        localStorage.setItem('trafficIssues', JSON.stringify(issues));
+
+        const { response, data } = await apiRequest('/api/issues', {
+            method: 'POST',
+            body: JSON.stringify(issue)
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                showPopup('Login Required', 'Please log in before reporting an issue.', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'auth.html';
+                }, 1200);
+                return;
+            }
+            showPopup('Submission Error', data.error || 'There was an error submitting your issue.', 'error');
+            return;
+        }
         
         showPopup('Issue Reported', 'Your traffic issue has been successfully reported!', 'success');
         
@@ -243,6 +264,17 @@ async function submitIssue(event) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Require a logged-in session before allowing reporting
+    apiRequest('/api/auth/me')
+        .then(({ response }) => {
+            if (!response.ok) {
+                window.location.href = 'auth.html';
+            }
+        })
+        .catch(() => {
+            window.location.href = 'auth.html';
+        });
+
     // Initialize map
     initMap();
     

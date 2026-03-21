@@ -791,6 +791,19 @@ function toggleVoiceGuidance() {
 }
 
 // Issues Management Functions
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        ...options
+    });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+}
+
 function toggleIssuesView() {
     const issuesContainer = document.getElementById('issues-container');
     const viewBtn = document.getElementById('view-issues-btn');
@@ -806,9 +819,34 @@ function toggleIssuesView() {
     }
 }
 
-function loadIssues() {
+async function loadIssues() {
     const issuesList = document.getElementById('issues-list');
-    const issues = JSON.parse(localStorage.getItem('trafficIssues') || '[]');
+    let issues = [];
+
+    try {
+        const { response, data } = await apiRequest('/api/issues', { method: 'GET' });
+        if (!response.ok) {
+            issuesList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 3em; margin-bottom: 20px;">⚠️</div>
+                    <h3>Unable to Load Issues</h3>
+                    <p>${data.error || 'Please try again in a moment.'}</p>
+                </div>
+            `;
+            return;
+        }
+        issues = Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Failed to load issues:', error);
+        issuesList.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 3em; margin-bottom: 20px;">⚠️</div>
+                <h3>Network Error</h3>
+                <p>Could not reach the server.</p>
+            </div>
+        `;
+        return;
+    }
     
     if (issues.length === 0) {
         issuesList.innerHTML = `
@@ -949,13 +987,16 @@ function getIssueTypeIcon(type) {
 
 // Initialize issues on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    const loggedInUser = sessionStorage.getItem('loggedInUser');
-    if (!loggedInUser) {
-        // Redirect to login if not authenticated
-        window.location.href = 'auth.html';
-        return;
-    }
+    // Check if user is logged in via backend session
+    apiRequest('/api/auth/me')
+        .then(({ response }) => {
+            if (!response.ok) {
+                window.location.href = 'auth.html';
+            }
+        })
+        .catch(() => {
+            window.location.href = 'auth.html';
+        });
     
     // Update the report issue link to point to the correct page
     const reportLink = document.querySelector('a[href="report-issue.html"]');

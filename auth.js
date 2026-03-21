@@ -1,14 +1,3 @@
-// Utility function to hash password
-function hashPassword(password) {
-    let hash = 0;
-    for (let i = 0; i < password.length; i++) {
-        const char = password.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
-    }
-    return hash.toString();
-}
-
 // Custom popup function
 function showPopup(title, message, type = 'info') {
     const popupOverlay = document.getElementById('popup-overlay');
@@ -58,6 +47,19 @@ function showPopup(title, message, type = 'info') {
     });
 }
 
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        ...options
+    });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+}
+
 // Get form elements
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
@@ -85,7 +87,7 @@ showLoginLink.addEventListener('click', (e) => {
 });
 
 // Signup validation
-signupBtn.addEventListener('click', () => {
+signupBtn.addEventListener('click', async () => {
     const email = signupEmailInput.value.trim();
     const password = signupPasswordInput.value.trim();
     const confirmPassword = confirmPasswordInput.value.trim();
@@ -106,28 +108,32 @@ signupBtn.addEventListener('click', () => {
         return;
     }
 
-    // Check if user already exists
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    
-    if (users[email]) {
-        showPopup('Account Exists', 'Email already exists. Please log in.', 'warning');
-        return;
+    try {
+        const { response, data } = await apiRequest('/api/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+            showPopup('Sign Up Failed', data.error || 'Unable to create account.', 'error');
+            return;
+        }
+
+        showPopup('Success', 'Account created successfully!', 'success');
+
+        // Switch to login form
+        signupForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        signupPasswordInput.value = '';
+        confirmPasswordInput.value = '';
+    } catch (error) {
+        console.error('Signup error:', error);
+        showPopup('Network Error', 'Could not connect to the server.', 'error');
     }
-
-    // Hash and store user
-    const hashedPassword = hashPassword(password);
-    users[email] = hashedPassword;
-    localStorage.setItem('users', JSON.stringify(users));
-
-    showPopup('Success', 'Account created successfully!', 'success');
-    
-    // Switch to login form
-    signupForm.classList.add('hidden');
-    loginForm.classList.remove('hidden');
 });
 
 // Login functionality
-loginBtn.addEventListener('click', () => {
+loginBtn.addEventListener('click', async () => {
     const email = loginEmailInput.value.trim();
     const password = loginPasswordInput.value.trim();
 
@@ -137,45 +143,42 @@ loginBtn.addEventListener('click', () => {
         return;
     }
 
-    // Admin hardcoded credentials
-    if (email === 'admin@kigali.com' && password === 'admin123') {
-        sessionStorage.setItem('loggedInUser', JSON.stringify({ email, role: 'admin' }));
-        showPopup('Welcome Admin!', 'Login successful! Redirecting to admin dashboard...', 'success');
-        setTimeout(() => {
-            window.location.href = 'admin.html';
-        }, 1200);
-        return;
-    }
+    try {
+        const { response, data } = await apiRequest('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
 
-    // Check credentials for normal users
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    const hashedInputPassword = hashPassword(password);
+        if (!response.ok) {
+            showPopup('Login Failed', data.error || 'Invalid email or password', 'error');
+            return;
+        }
 
-    if (users[email] && users[email] === hashedInputPassword) {
-        // Successful login
-        sessionStorage.setItem('loggedInUser', JSON.stringify({ email, role: 'user' }));
+        const role = data.user?.role || 'user';
         showPopup('Welcome Back!', 'Login successful!', 'success');
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = role === 'admin' ? 'admin.html' : 'index.html';
         }, 1200);
-    } else {
-        showPopup('Login Failed', 'Invalid email or password', 'error');
+    } catch (error) {
+        console.error('Login error:', error);
+        showPopup('Network Error', 'Could not connect to the server.', 'error');
     }
 });
 
 // Check if user is already logged in
-document.addEventListener('DOMContentLoaded', () => {
-    const loggedInUser = sessionStorage.getItem('loggedInUser');
-    if (loggedInUser) {
-        try {
-            const user = JSON.parse(loggedInUser);
-            if (user.role === 'admin') {
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const { response, data } = await apiRequest('/api/auth/me', { method: 'GET' });
+        if (response.ok && data.authenticated) {
+            if (data.user?.role === 'admin') {
                 window.location.href = 'admin.html';
                 return;
             }
-        } catch (e) {}
-        window.location.href = 'index.html';
-        return;
+            window.location.href = 'index.html';
+            return;
+        }
+    } catch (error) {
+        console.warn('Session check skipped:', error);
     }
 
     // Add Enter key functionality for login form
