@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 from flask import Flask, jsonify, send_from_directory
 
@@ -21,6 +22,7 @@ def create_app():
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
 
     db.init_app(app)
 

@@ -218,6 +218,7 @@ header {
     border-radius: 14px;
     box-shadow: var(--shadow);
     overflow: hidden;
+    margin-bottom: 24px;
 }
 .issues-header {
     display: flex;
@@ -255,6 +256,86 @@ header {
     max-height: 600px;
     overflow-y: auto;
     padding: 24px 20px;
+}
+.users-container {
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+.users-header {
+    padding: 22px 20px 12px 20px;
+    border-bottom: 1px solid var(--primary-light);
+    background: #f8f9fa;
+}
+.users-header h2 {
+    margin: 0;
+    color: var(--primary);
+    font-weight: 700;
+}
+.users-tools {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--primary-light);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+.user-search-group {
+    width: 100%;
+    min-width: 240px;
+}
+.users-list {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 18px 20px;
+}
+.user-item {
+    border: 1.5px solid var(--primary-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff 80%, var(--primary-light) 100%);
+}
+.user-item:last-child {
+    margin-bottom: 0;
+}
+.user-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.user-email {
+    font-weight: 700;
+    color: #2b2b2b;
+    word-break: break-all;
+}
+.role-badge {
+    border-radius: 16px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.role-badge.admin {
+    background: #fde68a;
+    color: #7c5a00;
+}
+.role-badge.user {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.user-meta {
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    flex-wrap: wrap;
 }
 .delete-btn {
     background: linear-gradient(90deg, var(--danger) 60%, var(--accent) 100%) !important;
@@ -510,6 +591,10 @@ header {
     .issues-header {
         flex-direction: column;
         gap: 15px;
+    }
+    .users-tools {
+        flex-direction: column;
+        align-items: stretch;
     }
     .issue-header {
         flex-direction: column;

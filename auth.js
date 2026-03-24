@@ -60,6 +60,21 @@ async function apiRequest(url, options = {}) {
     return { response, data };
 }
 
+function validateEmail(email) {
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+    if (password.length < 8) {
+        return 'Password must be at least 8 characters long';
+    }
+    if (password.length > 128) {
+        return 'Password must be at most 128 characters long';
+    }
+    return null;
+}
+
 // Get form elements
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
@@ -89,8 +104,8 @@ showLoginLink.addEventListener('click', (e) => {
 // Signup validation
 signupBtn.addEventListener('click', async () => {
     const email = signupEmailInput.value.trim();
-    const password = signupPasswordInput.value.trim();
-    const confirmPassword = confirmPasswordInput.value.trim();
+    const password = signupPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
 
     // Basic validations
     if (!email) {
@@ -98,8 +113,14 @@ signupBtn.addEventListener('click', async () => {
         return;
     }
 
-    if (password.length < 6) {
-        showPopup('Error', 'Password must be at least 6 characters long', 'error');
+    if (!validateEmail(email)) {
+        showPopup('Error', 'Please enter a valid email address', 'error');
+        return;
+    }
+
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+        showPopup('Error', passwordValidationError, 'error');
         return;
     }
 
@@ -109,6 +130,7 @@ signupBtn.addEventListener('click', async () => {
     }
 
     try {
+        signupBtn.disabled = true;
         const { response, data } = await apiRequest('/api/auth/signup', {
             method: 'POST',
             body: JSON.stringify({ email, password })
@@ -124,26 +146,34 @@ signupBtn.addEventListener('click', async () => {
         // Switch to login form
         signupForm.classList.add('hidden');
         loginForm.classList.remove('hidden');
+        signupEmailInput.value = '';
         signupPasswordInput.value = '';
         confirmPasswordInput.value = '';
     } catch (error) {
         console.error('Signup error:', error);
         showPopup('Network Error', 'Could not connect to the server.', 'error');
+    } finally {
+        signupBtn.disabled = false;
     }
 });
 
 // Login functionality
 loginBtn.addEventListener('click', async () => {
     const email = loginEmailInput.value.trim();
-    const password = loginPasswordInput.value.trim();
+    const password = loginPasswordInput.value;
 
     // Validate inputs
     if (!email || !password) {
         showPopup('Error', 'Please enter both email and password', 'error');
         return;
     }
+    if (!validateEmail(email)) {
+        showPopup('Error', 'Please enter a valid email address', 'error');
+        return;
+    }
 
     try {
+        loginBtn.disabled = true;
         const { response, data } = await apiRequest('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
@@ -162,6 +192,8 @@ loginBtn.addEventListener('click', async () => {
     } catch (error) {
         console.error('Login error:', error);
         showPopup('Network Error', 'Could not connect to the server.', 'error');
+    } finally {
+        loginBtn.disabled = false;
     }
 });
 

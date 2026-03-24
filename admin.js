@@ -1,6 +1,8 @@
 // Global variables
 let allIssues = [];
 let filteredIssues = [];
+let allUsers = [];
+let filteredUsers = [];
 
 async function apiRequest(url, options = {}) {
     const response = await fetch(url, {
@@ -106,6 +108,29 @@ async function loadIssues() {
     }
 }
 
+// Load all users for admin view
+async function loadUsers() {
+    const usersList = document.getElementById('users-list');
+    if (!usersList) {
+        return;
+    }
+
+    try {
+        const { response, data } = await apiRequest('/api/auth/users', { method: 'GET' });
+        if (!response.ok) {
+            showPopup('Error', data.error || 'Failed to load users.', 'error');
+            return;
+        }
+
+        allUsers = Array.isArray(data) ? data : [];
+        allUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        filterUsers();
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showPopup('Network Error', 'Failed to load users from server.', 'error');
+    }
+}
+
 // Update statistics
 function updateStatistics() {
     const totalIssues = allIssues.length;
@@ -145,6 +170,22 @@ function filterIssues() {
     displayIssues();
 }
 
+function filterUsers() {
+    const userSearchInput = document.getElementById('user-search-input');
+    const searchTerm = userSearchInput ? userSearchInput.value.toLowerCase() : '';
+
+    filteredUsers = allUsers.filter(user => {
+        if (!searchTerm) {
+            return true;
+        }
+
+        const searchText = `${user.email} ${user.role}`.toLowerCase();
+        return searchText.includes(searchTerm);
+    });
+
+    displayUsers();
+}
+
 // Display filtered issues
 function displayIssues() {
     const issuesList = document.getElementById('issues-list');
@@ -165,6 +206,51 @@ function displayIssues() {
         const issueElement = createIssueElement(issue);
         issuesList.appendChild(issueElement);
     });
+}
+
+function displayUsers() {
+    const usersList = document.getElementById('users-list');
+    if (!usersList) {
+        return;
+    }
+
+    if (filteredUsers.length === 0) {
+        usersList.innerHTML = `
+            <div style="text-align: center; padding: 24px; color: #666;">
+                <div style="font-size: 2.2em; margin-bottom: 12px;">👥</div>
+                <h3 style="margin-bottom: 6px;">No Users Found</h3>
+                <p>No users match your search.</p>
+            </div>
+        `;
+        return;
+    }
+
+    usersList.innerHTML = '';
+    filteredUsers.forEach(user => {
+        usersList.appendChild(createUserElement(user));
+    });
+}
+
+function createUserElement(user) {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'user-item';
+
+    const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : 'Unknown';
+    const roleClass = user.role === 'admin' ? 'admin' : 'user';
+    const issueWord = user.issues_count === 1 ? 'issue' : 'issues';
+
+    userDiv.innerHTML = `
+        <div class="user-main">
+            <span class="user-email">📧 ${user.email}</span>
+            <span class="role-badge ${roleClass}">${user.role}</span>
+        </div>
+        <div class="user-meta">
+            <span>📝 Reports: ${user.issues_count} ${issueWord}</span>
+            <span>🗓️ Joined: ${createdAt}</span>
+        </div>
+    `;
+
+    return userDiv;
 }
 
 // Create issue element for admin view
@@ -310,6 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await loadIssues();
+    await loadUsers();
 
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'r') {

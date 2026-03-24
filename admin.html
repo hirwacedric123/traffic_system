@@ -76,6 +76,27 @@
                 <!-- Issues will be loaded here -->
             </div>
         </div>
+        <div class="users-container">
+            <div class="users-header">
+                <h2>Registered Users</h2>
+            </div>
+            <div class="users-tools">
+                <div class="search-group user-search-group">
+                    <input
+                        type="text"
+                        id="user-search-input"
+                        placeholder="Search users by email or role..."
+                        onkeyup="filterUsers()"
+                    >
+                </div>
+                <div class="refresh-btn" onclick="loadUsers()">
+                    <span>🔄</span> Refresh Users
+                </div>
+            </div>
+            <div id="users-list" class="users-list">
+                <!-- Users will be loaded here -->
+            </div>
+        </div>
     </div>
     <!-- Custom Popup Overlay -->
     <div id="popup-overlay" class="popup-overlay">
