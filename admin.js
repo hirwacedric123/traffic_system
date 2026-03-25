@@ -131,6 +131,44 @@ async function loadUsers() {
     }
 }
 
+async function exportUsers() {
+    try {
+        const formatEl = document.getElementById('user-export-format');
+        const format = formatEl?.value || 'csv';
+
+        const url = `/api/auth/users/export?format=${encodeURIComponent(format)}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            showPopup('Error', data.error || 'Failed to export users.', 'error');
+            return;
+        }
+
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get('Content-Disposition') || '';
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+        const filename = filenameMatch ? filenameMatch[1] : `users.${format}`;
+
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+
+        showPopup('Export Ready', 'Users export download has started.', 'success');
+    } catch (error) {
+        console.error('Export failed:', error);
+        showPopup('Network Error', 'Could not export users.', 'error');
+    }
+}
+
 // Update statistics
 function updateStatistics() {
     const totalIssues = allIssues.length;

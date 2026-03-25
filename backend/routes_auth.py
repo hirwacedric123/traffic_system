@@ -1,8 +1,13 @@
 from functools import wraps
 import re
 import time
+import csv
+import io
+import json
+from html import escape
+from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, Response
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -171,6 +176,10 @@ def me():
 @auth_bp.get("/users")
 @admin_required
 def list_users():
+    return jsonify(_get_users_export_data()), 200
+
+
+def _get_users_export_data():
     users_with_issue_count = (
         db.session.query(User, func.count(Issue.id).label("issues_count"))
         .outerjoin(Issue, Issue.reporter_user_id == User.id)
@@ -179,7 +188,7 @@ def list_users():
         .all()
     )
 
-    users = [
+    return [
         {
             "id": str(user.id),
             "email": user.email,
@@ -189,4 +198,77 @@ def list_users():
         }
         for user, issues_count in users_with_issue_count
     ]
-    return jsonify(users), 200
+
+
+@auth_bp.get("/users/export")
+@admin_required
+def export_users():
+    fmt = (request.args.get("format") or "csv").strip().lower()
+    if fmt not in {"csv", "json", "excel"}:
+        return jsonify({"error": "Invalid export format. Use 'csv', 'json', or 'excel'."}), 400
+
+    users = _get_users_export_data()
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+
+    if fmt == "json":
+        filename = f"users_{ts}.json"
+        payload = json.dumps(users)
+        return Response(
+            payload,
+            mimetype="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    # CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "email", "role", "created_at", "issues_count"])
+    for u in users:
+        writer.writerow([u["id"], u["email"], u["role"], u["created_at"], u["issues_count"]])
+    csv_data = output.getvalue()
+    filename = f"users_{ts}.csv"
+
+    if fmt == "excel":
+        filename = f"users_{ts}.xls"
+        # Excel can open HTML tables saved with a .xls extension.
+        # This avoids adding extra Python dependencies (like openpyxl).
+        header_cells = ["id", "email", "role", "created_at", "issues_count"]
+        header_html = "".join([f"<th>{escape(h)}</th>" for h in header_cells])
+        body_rows = []
+        for u in users:
+            body_rows.append(
+                "<tr>"
+                f"<td>{escape(str(u['id']))}</td>"
+                f"<td>{escape(str(u['email']))}</td>"
+                f"<td>{escape(str(u['role']))}</td>"
+                f"<td>{escape(str(u['created_at']))}</td>"
+                f"<td>{escape(str(u['issues_count']))}</td>"
+                "</tr>"
+            )
+
+        html_doc = (
+            '<!DOCTYPE html><html><head>'
+            '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+            "</head><body>"
+            "<table border='1' cellpadding='5' cellspacing='0'>"
+            "<thead><tr>"
+            f"{header_html}"
+            "</tr></thead>"
+            "<tbody>"
+            f"{''.join(body_rows)}"
+            "</tbody>"
+            "</table>"
+            "</body></html>"
+        )
+
+        return Response(
+            html_doc,
+            mimetype="application/vnd.ms-excel",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

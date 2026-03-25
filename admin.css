@@ -281,6 +281,48 @@ header {
     align-items: center;
     justify-content: space-between;
 }
+.users-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+.export-group {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+.export-group label {
+    font-weight: 700;
+    color: var(--primary);
+    white-space: nowrap;
+}
+#user-export-format {
+    padding: 14px 18px;
+    border: 1.5px solid var(--primary-light);
+    border-radius: 24px;
+    font-size: 1rem;
+    background: #f8f9fa;
+    outline: none;
+}
+.export-btn {
+    background: linear-gradient(90deg, var(--primary) 60%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,184,169,0.08);
+    transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+    white-space: nowrap;
+}
+.export-btn:hover {
+    background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%);
+    box-shadow: 0 4px 16px rgba(0,184,169,0.13);
+    transform: translateY(-1px);
+}
 .user-search-group {
     width: 100%;
     min-width: 240px;
@@ -595,6 +637,17 @@ header {
     .users-tools {
         flex-direction: column;
         align-items: stretch;
+    }
+    .users-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .export-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #user-export-format {
+        width: 100%;
     }
     .issue-header {
         flex-direction: column;

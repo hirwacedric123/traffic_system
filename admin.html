@@ -89,8 +89,25 @@
                         onkeyup="filterUsers()"
                     >
                 </div>
-                <div class="refresh-btn" onclick="loadUsers()">
-                    <span>🔄</span> Refresh Users
+                <div class="users-actions">
+                    <div class="refresh-btn" onclick="loadUsers()">
+                        <span>🔄</span> Refresh Users
+                    </div>
+                    <div class="export-group">
+                        <label for="user-export-format">Export:</label>
+                        <select id="user-export-format">
+                            <option value="csv" selected>CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                        <button
+                            type="button"
+                            class="export-btn"
+                            onclick="exportUsers()"
+                        >
+                            ⬇ Download
+                        </button>
+                    </div>
                 </div>
             </div>
             <div id="users-list" class="users-list">
